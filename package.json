@@ -1,0 +1,29 @@
+{
+    "name": "personal-delta-bot",
+    "version": "1.0.0",
+    "description": "Personal Delta Exchange Trading Bot",
+    "main": "server.js",
+    "scripts": {
+      "start": "node server.js"
+    },
+    "dependencies": {
+      "express": "^4.18.2",
+      "socket.io": "^4.6.1",
+      "axios": "^1.4.0",
+      "dotenv": "^16.0.3"
+    },
+    "engines": {
+      "node": ">=18.0.0"
+    },
+    "keywords": [
+      "trading",
+      "bot",
+      "delta",
+      "hedging",
+      "personal"
+    ],
+    "author": "Your Name",
+    "license": "MIT"
+  }
+ 
+  

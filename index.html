@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Delta Bot - Personal Trading Assistant</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <h1>🤖 My Delta Bot</h1>
+        <p class="subtitle">Personal Trading Assistant</p>
+        <span class="connection-status" id="connectionStatus">🔴 Connecting...</span>
+      </div>
+      <div class="header-right">
+        <button id="settingsBtn" class="btn btn-secondary">
+          <span class="icon">⚙️</span>
+          Settings
+        </button>
+        <button id="toggleBot" class="btn btn-danger">
+          <span class="icon">⏸️</span>
+          Stop Bot
+        </button>
+      </div>
+    </header>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>⚙️ Bot Settings</h2>
+        <p class="modal-subtitle">Configure your personal bot</p>
+        
+        <div class="settings-grid">
+          <div class="setting-item">
+            <label>Delta Threshold (%)</label>
+            <input type="number" id="deltaThreshold" value="15" step="0.5" min="1" max="50">
+            <small>Trigger hedge when delta exceeds this percentage</small>
+          </div>
+          
+          <div class="setting-item">
+            <label>Check Interval (seconds)</label>
+            <input type="number" id="checkInterval" value="60" min="10" max="600">
+            <small>How often to check your positions</small>
+          </div>
+          
+          <div class="setting-item">
+            <label>Min Hedge Size</label>
+            <input type="number" id="minHedgeSize" value="0.01" step="0.01" min="0.001">
+            <small>Minimum contracts to hedge</small>
+          </div>
+        </div>
+        
+        <button id="saveSettings" class="btn btn-primary">
+          💾 Save Settings
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="status-cards">
+      <div class="card card-status">
+        <div class="card-icon">🤖</div>
+        <div class="card-content">
+          <div class="card-label">Bot Status</div>
+          <div class="card-value" id="botStatus">LOADING...</div>
+          <div class="card-subtitle" id="lastCheck">Initializing...</div>
+        </div>
+      </div>
+
+      <div class="card card-delta">
+        <div class="card-icon">📊</div>
+        <div class="card-content">
+          <div class="card-label">Current Delta</div>
+          <div class="card-value" id="currentDelta">0.00%</div>
+          <div class="card-subtitle" id="deltaThresholdDisplay">Threshold: ±15%</div>
+        </div>
+      </div>
+
+      <div class="card card-value">
+        <div class="card-icon">💰</div>
+        <div class="card-content">
+          <div class="card-label">Portfolio Value</div>
+          <div class="card-value" id="ethValue">$0.00</div>
+          <div class="card-subtitle">ETH positions</div>
+        </div>
+      </div>
+
+      <div class="card card-trades">
+        <div class="card-icon">📈</div>
+        <div class="card-content">
+          <div class="card-label">Total Hedges</div>
+          <div class="card-value" id="totalTrades">0</div>
+          <div class="card-subtitle">Executed trades</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delta Chart -->
+    <div class="chart-section">
+      <div class="section-header">
+        <h2>📈 Delta History</h2>
+        <div class="chart-legend">
+          <span class="legend-item">
+            <span class="legend-dot" style="background: #8b5cf6;"></span>
+            Portfolio Delta
+          </span>
+          <span class="legend-item">
+            <span class="legend-dot" style="background: #ef4444;"></span>
+            Thresholds
+          </span>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="deltaChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="two-columns">
+      
+      <!-- Trade History -->
+      <div class="trades-section">
+        <div class="section-header">
+          <h2>💰 Recent Trades</h2>
+          <span class="badge" id="tradeCount">0 trades</span>
+        </div>
+        <div id="tradesBody" class="trades-list">
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>No trades yet</p>
+            <small>Trades will appear here when bot executes hedges</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Logs -->
+      <div class="logs-section">
+        <div class="section-header">
+          <h2>📝 Activity Log</h2>
+          <button id="clearLogs" class="btn-icon" title="Clear logs">🗑️</button>
+        </div>
+        <div id="logsBody" class="logs-list">
+          <div class="log-item info">
+            <span class="log-time">--:--:--</span>
+            <span class="log-level">INFO</span>
+            <span class="log-message">Initializing bot...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Info -->
+    <div class="footer-info">
+      <div class="info-box">
+        <span class="info-icon">💡</span>
+        <div>
+          <strong>Personal Use Mode</strong>
+          <p>This is your private trading bot. Data is stored in memory and resets on restart.</p>
+        </div>
+      </div>
+      <div class="info-box">
+        <span class="info-icon">⚡</span>
+        <div>
+          <strong>Real-time Updates</strong>
+          <p>Dashboard updates automatically via WebSocket. No need to refresh.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
